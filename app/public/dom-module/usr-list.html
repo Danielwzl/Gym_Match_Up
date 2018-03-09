@@ -1,0 +1,50 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="one-usr.html">
+<dom-module id="usr-list">
+    <template>
+<style>
+ .usr.list{
+        max-height: 80px;
+        overflow-x:scroll;
+    }
+</style>
+<div class="ui middle aligned divided usr list">
+
+</div>
+
+    </template>
+    <script>
+        Polymer({
+            is: "usr-list",
+            ready: function() {
+
+            },
+            properties: {},
+            /*show all users on the list except me*/
+            addUser: function(names, dcnt, me) {
+                //if someone quit, then remove it
+                if (dcnt) {
+                    var tempuser = $('.usr.list #' + dcnt);
+                    tempuser.fadeOut(500);
+                    tempuser.remove();
+                    return;
+                }
+                var user; //update user list by all user online
+                for (var i = 0, len = names.length || 0; i < len; i++) {
+                    user = names[i];
+                    if (user != me) { //dont add me into list for my page
+                        if ($('.usr.list #' + user).length > 0) { //if exist in the list, dont append 
+                            continue;
+                        } else {
+                            $('.usr.list').append($('<one-usr/>', {
+                                name: user,
+                                id: user
+                            }));
+                        }
+                    }
+                }
+            }
+        });
+
+    </script>
+</dom-module>

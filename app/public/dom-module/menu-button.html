@@ -1,0 +1,27 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="menu-button">
+    <template>
+<style>
+    i:hover{
+        background: #ffffff;
+    }
+    i:active{
+        border: 1pt solid black;
+    }
+    i{
+        background: rgba(255, 255, 255, 0);
+    }
+</style>
+<a class$="{{item}}" class="mymenu_link" data-tab$="{{type}}">
+<i data-content$="{{pop}}" class$="{{icon}}" data-variation="small"></i>
+</a>
+    </template>
+    <script>
+        Polymer({
+            is: "menu-button",
+            ready: function() {},
+            properties: {}
+        });
+
+    </script>
+</dom-module>

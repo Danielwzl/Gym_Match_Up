@@ -1,0 +1,144 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="post-match">
+    <template>
+<style>
+    .post.form{
+        height: 100%;
+        width: 100%;
+    }
+    .post.form .button{
+        display: block;
+        width: 40%;
+        margin-left: 60%;
+        margin-top: 20px;
+    }
+    #errmsg{
+        color: red;
+    }
+    #post_suc{
+        color: #66ad66;
+        font-weight: bolder;
+        font-size: 150%;
+    }
+</style>
+<form class="ui post form">
+  <h4 class="ui horizontal divider">New Matchup</h4>
+  <div class="field">
+  </div>
+  <div class="field">
+    <label>Meetup Place</label>
+    <div class="fields">
+      <div class="sixteen wide field">
+        <input type="text" name="meetplace" placeholder="Street Address" required>
+        </div>
+    </div>
+  </div>
+  <div class="two fields">
+    <div class="field">
+      <label>Gym</label>
+      <select class="ui fluid dropdown" name="gym" required>
+        <option value="" disabled selected>Gym</option>
+      </select>
+    </div>
+      <div class="field">
+      <label>Branch</label>
+      <select class="ui fluid dropdown" name="branch" required>
+        <option value="" disabled selected>Branch</option>
+      </select>
+    </div>
+    </div>
+    <h4 class="ui dividing header">Detail</h4>
+  <div class="field">
+    <label>Type</label>
+ <select class="ui fluid dropdown" name="type" required>
+<option value="" disabled selected>Type</option>
+<option selected="selected">Not specified</option>
+      </select>
+  </div>
+  <div class="fields">
+    <div class="two wide field">
+      <label>People</label>
+      <input type="number" min=1 name="maxppl" required>
+    </div>
+    <div class="five wide field">
+      <label>Time</label>
+      <input type="datetime-local" name="time" value="2017-01-01T00:00:00" required>
+    </div>
+      <div class="nine wide field">
+      <label>Description</label>
+      <input type="text" name="des">
+    </div>
+  </div>
+    <div id="errmsg" hidden>Please fill the all fields except Workout Type!</div>
+    <div id="post_suc" hidden>New post is updated!</div>
+  <button class="ui green button" tabindex="0" on-tap="postMatch">Post</button>
+</form>
+    </template>
+    <script>
+        //post new match up
+        Polymer({
+            is: "post-match",
+            ready: function() {
+                _post = this;
+                this.initialPage();
+                $('select[name=gym]').change(function() {
+                    var brch = $(this).val();
+                    $('select[name=branch] option').not('option:first').remove();
+                    _post.generateDropdown(_post.dropdown_info["gym_info"][brch], 'branch');
+                });
+            },
+            properties: {
+                dropdown_info: Object
+            },
+            //gym drop down
+            generateDropdown: function(data, dropdown) {
+                $.each(data, function(k, v) {
+                    $('select[name=' + dropdown + ']').append($('<option/>', {
+                        value: v,
+                        text: v
+                    }));
+                });
+            },
+            initialPage: function() {
+                $.post('/gymDropdown', function(data) {
+                    _post.dropdown_info = data[0];
+                    _post.generateDropdown(Object.keys(data[0].gym_info), 'gym');
+                    _post.generateDropdown(data[0].type_workout, 'type');
+                });
+            },
+            //submit form
+            postMatch: function(e) {
+                e.preventDefault();
+                if (this.checkForm()) {
+                    var qstring = $('.post.form').serialize() + '&id=' + window.location.href.split('/')[4] + '&postTime=' + new Date().toLocaleString();
+                    $.post('/postNewMatch', qstring, function(data) {
+                        if (data) {
+                            $('#post_suc').fadeIn(500);
+                            $('post-match .button').prop('disabled', true);
+                            setTimeout(function() {
+                                $('#post_suc').fadeOut(500);
+                                $('post-match .button').prop('disabled', false);
+                            }, 3000)
+                        }
+                    });
+                } else {
+                    $('#errmsg').show(500);
+                    setTimeout(function() {
+                        $('#errmsg').fadeOut(500);
+                    }, 3000)
+                }
+            },
+            //check field filled up
+            checkForm: function() {
+                var isValid = true;
+                var fields = $('.post.form').find('input,select').serializeArray();
+                $.each(fields, function(i, one) {
+                    if (!one.value || one.value == undefined) isValid = false;
+                });
+                if (isValid) $('#errmsg').hide(500);
+                return isValid;
+            }
+        });
+
+    </script>
+</dom-module>

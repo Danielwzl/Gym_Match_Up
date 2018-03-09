@@ -1,0 +1,46 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="account-info.html">
+<link rel="import" href="person-info.html">
+<link rel="import" href="activity-info.html">
+<dom-module id="user-profile">
+
+    <template>
+<style>
+</style>
+           <div class="ui three item menu">
+            <a class="active item" data-tab="acct">Account</a>
+            <a class="item" data-tab="per">Personal</a>
+            <a class="item" data-tab="act">Activity</a>
+        </div>
+        <div class="ui bottom active attached tab segment" data-tab="acct">
+          <account-info id="acct"></account-info>
+        </div>
+        <div class="ui right  attached tab segment" data-tab="per">
+            <person-info id="per"></person-info>
+        </div>
+        <div class="ui right attached tab segment" data-tab="act">
+            <activity-info id="act"></activity-info>
+        </div>
+        
+         
+    </template>
+    <script>
+        //user profile page
+        Polymer({
+            is: "user-profile",
+            properties: {},
+            ready: function() {
+                _profile = this;
+                $.post('/getUserProfile', {
+                    _id: window.location.href.split('/')[4]
+                }, function(data) {
+                    _profile.$.acct.db_uname = data.name;
+                    _profile.$.acct.db_email = data.email;
+                    _profile.$.act.db_uname = data.name;
+                    _profile.$.per.initialPage(data.name, data.rName, data.address, data.phone);
+                });
+            }
+        });
+
+    </script>
+</dom-module>

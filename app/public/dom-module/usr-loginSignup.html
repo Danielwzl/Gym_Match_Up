@@ -1,0 +1,51 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="usr-login.html">
+<link rel="import" href="usr-signup.html">
+<script src="/socket.io/socket.io.js"></script>
+<dom-module id="usr-loginSignup">
+    <template>
+        <style>
+            #userAccount {
+                width: 500px;
+                height: auto;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 200px;
+            }
+            
+            .menu.loginSignup>a {
+                width: 50%;
+                display: block;
+                text-align: center;
+            }
+            
+            .menu.loginSignup>a:HOVER {
+                background-color: orange;
+                color: white;
+            }
+        </style>
+        <div id="userAccount">
+            <h1>Sign up/Login</h1>
+            <div class="ui top attached tabular menu loginSignup">
+                <a class="active item" data-tab="login">Login</a> 
+                <a class="item" data-tab="reg">Sign Up</a>
+            </div>
+            <div class="ui bottom attached active tab segment" data-tab="login">
+                <usr-login></usr-login>
+            </div>
+            <div class="ui bottom attached tab segment" data-tab="reg">
+                <usr-signup id='signup'></usr-signup>
+            </div>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: "usr-loginSignup",
+            ready: function() {
+                $('#loader').hide();
+            },
+            properties: {}
+        });
+
+    </script>
+</dom-module>

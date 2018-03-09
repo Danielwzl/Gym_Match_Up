@@ -1,0 +1,72 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="msg-Bubble">
+    <template>
+<style>
+    .date {
+        float: right;
+        color: #898989;
+    }
+    
+    span {
+        font-size: 150%;
+        color: #464242;
+    }
+    
+    .name {
+        font-size: 120%;
+        font-weight: bolder;
+    }
+    
+    a {
+        width: 50%;
+    }
+    
+    .left.msgBubble {
+        float: left; 
+        display: block;      
+        clear: left; 
+        margin-bottom: 10px;
+    }
+    
+    .right.msgBubble {
+        float: right;
+        display: block;
+        clear: right; 
+        margin-bottom: 10px;
+    }
+    .private{
+        color: #8400ff;
+    }
+</style>
+        <a on-tap="privatemsg" class$="{{bbl}}">
+            <div class$="{{wisper}}">{{name}}</div>
+            <br><span>{{msg}}</span><br><br>
+                <div class="date">{{date}}</div>
+        </a>
+    </template>
+    <script>
+        //from user: ui olive right pointing label msgBubble
+        //from other: ui white left pointing label msgBubble
+        //from user: no name
+        //from other: name
+        //from user: right class="date right"
+        //from other: left class ="date left"
+        Polymer({
+            is: "msg-Bubble",
+            ready: function() {},
+            properties: {
+                name: String
+            },
+            //click bubble from other user will trigger private msg box 
+            privatemsg: function() {
+                if (this.name) {
+                    var buttonTotrigger = $('one-usr[id=' + this.name + ']');
+                    buttonTotrigger.trigger('click');
+                    buttonTotrigger.find('.newmsg').fadeOut(500);
+                    if (this.name != undefined) $('.privatechat.popup .divider').text('To ' + this.name);
+                }
+            }
+        });
+
+    </script>
+</dom-module>

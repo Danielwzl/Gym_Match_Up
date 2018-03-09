@@ -1,0 +1,51 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="pass-word.html">
+<dom-module id="reset-pwd">
+    <template>
+        <style>
+            .ui.form.reset {
+                margin-top: 10%;
+                width: 50%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            legend {
+                text-align: center;
+                font-size: 200%;
+            }
+            
+            button {
+                float: right;
+            }
+        </style>
+        <form class="ui form reset">
+            <fieldset>
+                <legend>Reset Password</legend>
+                <pass-word id="passreset"></pass-word>
+                <br>
+                <button on-tap="submit" type="submit" class="ui green button" name='action' value='signup'>Reset</button>
+            </fieldset>
+        </form>
+    </template>
+    <script>
+        Polymer({
+            is: "reset-pwd",
+            ready: function() {},
+            properties: {},
+            submit: function(e) {
+                e.preventDefault();
+                //reset password
+                $.post('/updateUser', {
+                    newPass: this.$.passreset.password,
+                    sid: window.location.href.split('/')[4],
+                    type: 'resetPass'
+                }, function(data) {
+                    if (data.done) window.location.href = '/signupLogin'
+                });
+            }
+        });
+
+    </script>
+
+</dom-module>

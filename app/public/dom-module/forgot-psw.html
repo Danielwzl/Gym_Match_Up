@@ -1,0 +1,47 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="forgot-psw">
+    <template>
+        <style>
+            .ten.wide.field.forgot>.ui.button {
+                width: 100%;
+            }
+            
+            .ten.wide.field.forgot {
+                margin-left: auto;
+                margin-right: auto;
+            }
+        </style>
+        <form class="ui form forgot" hidden>
+            <div class="ten wide field forgot">
+                <div class="ui left icon input">
+                    <input type="text" name="emailRest" placeholder="Type email to get reset link..." required>
+                </div>
+            </div>
+            <div class="ten wide field forgot">
+                <button on-tap="sendEmail" class="ui orange button">Send Email</button>
+            </div>
+        </form>
+    </template>
+    <script>
+        Polymer({
+            is: "forgot-psw",
+            ready: function() {},
+            properties: {},
+            sendEmail: function(e) {
+                e.preventDefault();
+                //get email send to app.js and to auth.js to send email to this address
+                $.post('/forgot', {
+                    email: $('input[name=emailRest]').val()
+                }, function(data) {
+                    if (!data.exist) {
+                        alert("email does not exist!");
+                    } else {
+                        alert('email sent');
+                    }
+                });
+            }
+        });
+
+    </script>
+
+</dom-module>

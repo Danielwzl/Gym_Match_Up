@@ -1,0 +1,163 @@
+<!--user account module in profile-->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="account-info">
+    <template>
+<style>
+     span {
+                color: red;
+            }
+    .ui.header{
+        display: inline-block;
+    }
+    #chpw_suc{
+        color: green;
+    }
+    #chpw_suc{
+        font-weight: bolder;
+        font-size: 150%;
+    }
+</style>
+        <div class="ui header">Welcome</div>
+        <div class="ui header nameheader">{{db_uname}}</div>
+<form class="ui acc_info form">
+  <div class="email two fields">
+    <div class="field">
+      <label>Account E-mail:&nbsp; {{db_email}}</label>
+    </div>
+  </div>
+  <div class="uname two fields">
+    <div class="field">
+        <label>Username<span id='name_err' hidden>(Username exists)</span></label>
+      <input name="username" type="text" value={{db_uname}} on-keyup="checkName" disabled>
+    </div>
+  </div>
+  <div class="psw two fields">
+    <div class="field">
+            <label>Password<span id="msgPw" hidden>&nbsp;(Passwords are not matched)</span></label>
+            <input on-keyup="checkPass" id="p1" type="password" name="newPass" placeholder="Please type password" pattern=".{6,}" title="Password must be at least 6 length of combination of number or letter" required>
+    </div>
+  </div>
+        <div class="repwd two fields">
+    <div class="field">
+      <label>Retype Password</label>
+      <input on-keyup="checkPass" id="p2" type="password" placeholder="Re-type password" pattern=".{6,}" title="Password must be at least 6 length of combination of number or letter" required>
+        </div>    
+              <div class="old pass field" hidden>
+      <label>Type Old Password<span id="oldpw_err" hidden>(Password is not correct)</span></label>
+      <input name="old_psw" type="password" value="" on-tap="hideerr">
+    </div>
+    </div>
+
+  </div>
+<div class="ui submit orange button" on-tap="unlock">Edit</div>
+  <div class="ui green button" on-tap="submit">Submit</div>
+         <br>  <br><div id="chpw_suc" hidden>Account updated</div>
+        </form>
+    </template>
+    <script>
+        Polymer({
+            is: "account-info",
+            ready: function() {
+                _acct = this;
+            },
+            properties: {
+                db_uname: String, //name from database of this user
+                db_email: String, //email from database of this user
+                password: String, //new password
+                isSameName: Boolean //check if username already being taken when they update username
+            },
+            submit: function(e) {
+                if (this.isSameName) { //if username being taken, reutrn and display err msg
+                    $('#name_err').fadeIn(500);
+                    setTimeout(function() {
+                        $('#name_err').fadeOut(500);
+                    }, 3000);
+                    return;
+                } else $('.old.pass.field').fadeIn(500); //else show type old password page to verify user
+
+                e.preventDefault();
+                var oldpass = $('input[name=old_psw]').val(),
+                    email = this.db_email,
+                    newName = $('account-info input[name=username]').val(),
+                    newPass = this.password;
+                if (!newPass) { //there is no new valid password
+                    if (this.db_uname == newName) return; //if username has not being changed, nothing happed
+                    else $('.old.pass.field').fadeIn(500); //show type old password page to verify user
+                }
+                if (oldpass) { //if ytped old password verify it
+                    $.post('/updateAcct', {
+                        name: email,
+                        pass: oldpass,
+                        newPass: newPass,
+                        newName: newName,
+                        type: 'resetPass'
+                    }, function(data) {
+                        if (data) {
+                            $('#oldpw_err').fadeOut(500); //set it back
+                            $('.old.pass.field').fadeOut(500); //set it back
+                            $('.old.pass.field input').val(""); //set old password field back
+                            if (newName) _acct.db_uname = newName;
+                            $('#chpw_suc').fadeIn(500); //tell user updated
+                            setTimeout(function() {
+                                $('#chpw_suc').fadeOut(500);
+                            }, 3000);
+                            _acct.password = null; //once it update, reset it to null
+                        } else $('#oldpw_err').fadeIn(500);
+                    });
+                }
+            },
+            //toggle the input area
+            unlock: function(e) {
+                e.preventDefault();
+                var input = $('account-info input[name=username]'),
+                    flag = input.attr('disabled');
+                input.attr('disabled', !flag);
+            },
+            //check two new password matched
+            checkPass: function() {
+                var goodColor = '#66cc66',
+                    badColor = '#ff6666',
+                    emptyColor = 'white',
+                    pass_1 = $('#p1'),
+                    pass_2 = $('#p2');
+                if (pass_1.val() == '' && pass_2.val() == '') { //not input anything, nothing happen
+                    $('#msgPw').fadeOut('slow');
+                    this.passOk = false;
+                    pass_2.css('backgroundColor', emptyColor);
+                } else if (pass_1.val() != pass_2.val()) { //input but are not same, display error
+                    pass_2.css('backgroundColor', badColor);
+                    $('#msgPw').fadeIn('slow');
+                    $('input[name=old_psw]').val('');
+                    $('.old.pass.field').fadeOut(500);
+                    this.passOk = false;
+                } else { //input matched,valid password
+                    $('#msgPw').fadeOut('slow');
+                    pass_2.css('backgroundColor', goodColor);
+                    this.passOk = pass_1.val().length > 5 ? true : false;
+                    if (this.passOk) { //unique function for this object
+                        this.password = pass_1.val();
+                        $('.old.pass.field').fadeIn(500); //hide old password field
+                    }
+                }
+            },
+            hideerr: function() {
+                $('#oldpw_err').fadeOut(500);
+            },
+            //check if name exist
+            checkName: function() {
+                $.post('/checkExist', {
+                    name: $('account-info input[name=username]').val()
+                }, function(data) {
+                    _acct.isSameName = data.exist;
+                    if (_acct.isSameName) {
+                        $('#name_err').fadeIn(500);
+                        setTimeout(function() {
+                            $('#name_err').fadeOut(500);
+                        }, 3000);
+                    }
+                });
+            }
+        });
+
+    </script>
+</dom-module>

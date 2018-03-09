@@ -1,0 +1,476 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+
+<dom-module id="info-module">
+    <template>
+
+
+    <style> 
+        .second{
+            padding-bottom: 5%;
+        }
+        .first{
+
+        }
+        .ui.threaded.comments{
+            z-index: 1;
+        }
+	.restored-item {
+		transform: translateX(300px);
+		animation: 
+			openspace .3s ease forwards, 
+			restored-item-animation .5s .3s cubic-bezier(.14,.25,.52,1.56) forwards;
+        padding: 10px;
+        z-index: 0;
+	}
+ 
+	@keyframes openspace {
+		to {
+			height: auto;
+		}
+	}
+ 
+	@keyframes restored-item-animation {
+		0% {
+			opacity: 0;
+			transform: translateX(300px);
+		}
+ 
+		70% {
+			opacity: 0.5;
+			transform: translateX(-50px);
+		}
+	 
+		100% {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+	
+	.removed-item {
+		animation: removed-item-animation 1s linear;
+		transform-origin: 390px 100%;
+	}
+ 
+	@keyframes removed-item-animation {
+    0% {
+			opacity: 1;
+			transform: translateX(0) rotateZ(0);
+		}
+ 
+		50% {
+			opacity: 1;
+			transform: translateX(-400px) rotateZ(0);
+		}
+ 
+		75% {
+			opacity: 1;
+			transform: translateX(-420px) rotateZ(-30deg);
+		}
+ 
+		100% {
+			opacity: 0;
+			transform: translateX(-800px) rotateZ(-60deg)  translateY(400px);
+		}
+	}
+	
+	
+	
+	.join{
+		background-color: rgba(0, 255, 10, 0.1) !important;
+	}
+	
+	.full{
+		background-color: rgba(255, 255, 255, 0.37) !important;
+	}
+	
+	.normal{
+		background-color: rgba(255, 255, 255, 0.19) !important;
+	}
+
+  .ui.item{
+    width: auto;
+    padding-bottom: 2%;
+    white-space: normal;
+	border: 1px solid #ccc !important;
+	border-radius: 16px !important;
+	box-shadow: 2px 2px 5px rgba(178, 174, 174, 0.42);
+  }
+  .ui.message{
+  border: 1px solid #cbc8c8 !important;
+	border-radius: 16px !important;
+  }
+  
+  a{
+	color: #3e47af;
+	
+  }
+  a:hover{
+	color: #06063b;
+  
+  }
+        .description div:hover{
+            font-weight: bold;
+        }
+  .unselectable {
+   -moz-user-select: -moz-none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+
+   /*
+     Introduced in IE 10.
+     See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+   */
+   -ms-user-select: none;
+   user-select: none;
+        }
+        info-module textarea{
+
+        }
+        .extra a{
+            position: fixed;
+            bottom: 3%;
+            right: 3%;
+        }
+        h1{
+            text-align: center;
+        }
+    </style>
+
+    <div class$="ui item {{animate}} {{color}}" on-mouseover='show' on-mouseout='unhover' >
+	<div class="ui attached warning message" hidden>
+		<i class="close icon" on-tap="close"></i>
+	<div class="header">
+		You're already in this group
+	</div>
+	</div>
+	
+	
+	<div class="ui attached negative message" hidden>
+		<i class="close icon" on-tap="close"></i>
+	<div class="header">
+		This group is full already.
+	</div>
+	</div>
+	
+	<div class="first" >
+	  <div class="content">
+		<div class="header">
+			<h1 class="ui horizontal divider">{{name}}</h1>
+		</div>
+
+		<div class="description">
+			<div>Time: {{time}}</div>
+			<div>Date: {{date}}</div>
+            <div>Meeting Place: {{meetplace}}</div>
+            <div>Gym: {{gym}}</div>
+            <div>Gym Address: {{gymaddress}}</div>
+			<div>{{people}}</div>
+			<div>Workout Type: {{type}}</div>
+			<div>Number of people in group is {{numOfPeople}} </div>
+		</div>
+		
+		<br />
+	  </div>
+	</div>
+	<div class="second" hidden=true>
+		
+		<br>
+		<div class="ui column grid">
+			<div class="sixteen wide column item">
+			<div class="description">
+				<div>{{time}}</div>
+				<div>{{date}}</div>
+				<div>Meeting Place: {{meetplace}}</div>
+                <div>Gym: {{gym}}</div>
+                <div>Gym Address: {{gymaddress}}</div>
+				<div>Workout Type: {{type}}</div>
+				<div>Number of people in group {{numOfPeople}} </div>
+			</div>
+			
+			</div>
+			<div class="item">
+			<i  on-mouseover="popOutComment" on-mouseout="outPopOut" class="chat outline icon"></i> 
+
+					<div class="field">
+						<textarea type="text" placeholder="Type message..." cols="20" rows="4" value="{{taValue::input}}"></textarea>  
+					</div>
+					
+					<div class=" tiny blue ui button"on-tap="sendComment"><i class="icon edit"></i> Comment</div>
+				
+
+			</div>
+			
+			<div class="item">
+			<div class="extra">
+				<a class="unselectable isPost" data-tooltip="Join" ><i on-tap="join" class="ui right green floated add icon" ></i></a><br>
+				<a class="unselectable isUser"  data-tooltip="Done"><i on-tap="finish" class="ui red right floated archive icon"></i></a>
+			</div>
+			</div>
+		</div>
+	</div>
+	</div>
+	
+				
+ 
+    <br/>
+
+  </template>
+    <script>
+        Polymer({
+            is: 'info-module',
+            ready: function() {
+                var $this = this;
+                this.socket = io.connect();
+
+
+                if (!this.listOfPeople) {
+                    this.listOfPeople = [];
+                    this.numOfPeople = 1;
+                } else {
+                    this.numOfPeople = listOfPeople.length + 1;
+                }
+
+                //MAKE SURE TO ADD GLOBAL USER 
+                //user = 'person'
+
+                this.animate = "restored-item";
+                this.socket = io.connect();
+                this.color = this.getColor(user);
+            },
+            attached: function() {
+
+                var list = $(this).attr("listOfPeople");
+                var message = $(this).attr("message");
+
+                if (list) {
+                    var array = list.split(",")
+                    this.listOfPeople = array
+                    this.numOfPeople = array.length + 1
+                }
+                if (message) {
+                    var messageArray = JSON.parse(message);
+                    this.message = messageArray;
+                } else
+                    this.message = [];
+
+
+                this.color = this.getColor(user);
+
+                if (this.name != user)
+                    this.$$(".isUser").remove()
+                //Removes done button
+                if (this.name == user) {
+
+                    this.$$(".isPost").remove()
+                    this.color = "join"
+                }
+
+
+                var postTime = $(this).attr("postTime")
+                this.postTime = postTime;
+
+
+            },
+            properties: {
+                name: String,
+                id: String,
+                time: String,
+                date: String,
+                place: String,
+                listOfPeople: [],
+                type: String,
+                animate: String,
+                limit: Number,
+                numOfPeople: Number,
+                messages: {
+                    type: Array
+                },
+                description: String,
+                postTime: String,
+                taValue: String
+
+
+            },
+            delete: function() {
+                this.animate = "removed-item";
+                $(this).on("animationend", function() {
+                    $(this).remove();
+                })
+            },
+            join: function() {
+                //checks limit and checks if user is in array.
+
+                // var user = 'person'; //This should be in the parameter I don't know how to get user name from client.
+                if (this.match(user) && this.user != user) {
+                    if (this.numOfPeople != this.limit) {
+                        this.numOfPeople = this.numOfPeople + 1;
+                        this.listOfPeople.push(user);
+                        this.listOfPeople.push('user');
+                        this.color = "join";
+                        this.sendupdate();
+                    } else {
+                        this.$$(".ui.negative").removeAttribute("hidden")
+                        this.color = "full";
+                    }
+                } else {
+                    this.$$(".ui.warning").removeAttribute("hidden")
+                }
+            },
+            sendupdate: function() {
+                //This happens for socket io changes. and database update
+
+                var data = {
+                    user: user || null,
+                    numOfPeople: this.numOfPeople,
+                    name: this.name,
+                    type: this.type,
+                    place: this.place,
+                    time: this.time || null,
+                    date: this.date || null,
+                    des: this.description,
+                    limit: this.limit,
+                    id: this.id,
+                    postTime: this.postTime,
+                    listOfPeople: this.listOfPeople
+                };
+                $.post("/updatePost", data, function(dat) {})
+
+                this.socket.emit("info update", data, function() {});
+            },
+            match: function(user) {
+                //checks if user is in array.
+                var index = this.listOfPeople.indexOf(user);
+                if (index == -1)
+                    return true;
+                else
+                    return false;
+            },
+            show: function(e) {
+                //this will hide first element and show second
+
+                this.$$(".first").setAttribute("hidden", "true");
+                this.$$(".second").removeAttribute("hidden");
+            },
+            unhover: function(e) {
+                //This will show first element and hide second
+                this.$$(".second").setAttribute("hidden", "true");
+                this.$$(".first").removeAttribute("hidden");
+            },
+            update: function(data) {
+                //This will listen for data
+
+                this.listOfPeople = data.listOfPeople;
+                this.numOfPeople = data.numOfPeople;
+            },
+            getColor: function(user) {
+                if (!this.match(user) || user == this.name)
+                    return 'join';
+                else if (this.numOfPeople == this.limit)
+                    return "full";
+                else
+                    return 'normal';
+            },
+            finish: function() {
+                var data = {
+                    listOfPeople: this.listOfPeople,
+                    numOfPeople: this.numOfPeople,
+                    name: this.name,
+                    type: this.type,
+                    place: this.place,
+                    time: this.time || null,
+                    date: this.date || null,
+                    des: this.description,
+                    limit: this.limit,
+                    listOfPeople: this.listOfPeople,
+                    id: this.id,
+                    postTime: this.postTime
+                };
+                $.post("/finishPost", data, function(dat) {});
+
+                this.socket.emit("info done", data, function() {});
+            },
+            close: function(e) {
+                var target = e.target;
+                $(target).parent().attr("hidden", "true")
+            },
+
+            sendComment: function() {
+                //This will save on local client and send to database and emit socket to online users.
+
+                var message = this.taValue;
+                this.taValue = '';
+                if (message != undefined) {
+                    this.message.push({
+                        message: message,
+                        user: "anonymous"
+                    });
+                    var string = JSON.stringify(this.message)
+
+                    var data = {
+                        name: this.name,
+                        type: this.type,
+                        place: this.place,
+                        time: this.time || null,
+                        date: this.date || null,
+                        des: this.description,
+                        limit: this.limit,
+                        id: this.id,
+                        postTime: this.postTime,
+                        message: string
+                    };
+
+
+
+                    $.post("/commentUpdate", data, function() {})
+
+                    this.socket.emit("comment update", data, function() {})
+                }
+            },
+            popOutComment: function(e) {
+                //This will make comments appear by using the css style position fixed along with semantic
+                var left = e.clientX + "px";
+                var top = e.clientY + "px";
+
+                var div = $("<div>").attr("class", "ui threaded comments segment").css({
+                    "top": top,
+                    'z-index': 1
+                }).css("left", left).css("position", 'fixed')
+                var $this = this;
+                var message = this.message
+                if (message.length != 0) {
+                    $.each(this.message, function(key, value) {
+                        var comments = $("<div>").attr("class", "ui comments")
+
+                        //This will make comment field
+                        var commentField = $('<div>').attr("class", "ui comment");
+                        var author = $("<a>" + value.user + "</a>")
+                        var text = $("<div class='text'>" + value.message + "</div>")
+
+
+
+                        commentField.append(author);
+                        commentField.append(text);
+
+
+                        comments.append(commentField);
+                        div.append(comments)
+
+                    });
+                    $(this).append(div)
+                }
+            },
+            outPopOut: function(e) {
+                $(".ui.threaded.comments.segment").remove();
+
+
+            },
+            commentUpdate: function(data) {
+                this.message = JSON.parse(data.message);
+
+            }
+
+        });
+
+    </script>
+</dom-module>

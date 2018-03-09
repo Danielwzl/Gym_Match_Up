@@ -1,0 +1,51 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="pass-word">
+    <template>
+        <style>
+            span {
+                color: red;
+            }
+        </style>
+        <div class="field">
+            <label><span>*</span>Password<span id="msgPw" hidden>&nbsp;(Passwords are not matched)</span></label>
+            <input on-keyup="checkPass" id="p1" type="password" name="newPass" placeholder="Please type password" pattern=".{6,}" title="Password must be at least 6 length of combination of number or letter" required>
+        </div>
+        <div class="field">
+            <input on-keyup="checkPass" id="p2" type="password" placeholder="Re-type password" pattern=".{6,}" title="Password must be at least 6 length of combination of number or letter" required>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: "pass-word",
+            ready: function() {},
+            properties: {
+                passOk: Boolean,
+                password: String
+            },
+            //check password match
+            checkPass: function() {
+                var goodColor = '#66cc66',
+                    badColor = '#ff6666',
+                    emptyColor = 'white',
+                    pass_1 = $('#p1'),
+                    pass_2 = $('#p2');
+                if (pass_1.val() == '' && pass_2.val() == '') {
+                    $('#msgPw').fadeOut('slow');
+                    this.passOk = false;
+                    pass_2.css('backgroundColor', emptyColor);
+                } else if (pass_1.val() != pass_2.val()) {
+                    pass_2.css('backgroundColor', badColor);
+                    $('#msgPw').fadeIn('slow');
+                    this.passOk = false;
+                } else {
+                    $('#msgPw').fadeOut('slow');
+                    pass_2.css('backgroundColor', goodColor);
+                    this.passOk = pass_1.val().length > 5 ? true : false;
+                    if (this.passOk) this.password = pass_1.val();
+                }
+            },
+        });
+
+    </script>
+
+</dom-module>

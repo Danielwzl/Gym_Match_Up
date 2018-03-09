@@ -1,0 +1,92 @@
+<!--user activity module in profile-->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="one-activity.html">
+<dom-module id="activity-info">
+    <template>
+<style>
+    .ui.header{
+        display: inline-block;
+    }
+    .ui.divider{
+        text-align: center;
+    }
+</style>
+        <div class="ui header">Welcome</div>
+        <div class="ui header nameheader">{{db_uname}}</div>
+        <div class="ui horizontal divider header">Summary of Activity</div>
+        <div id="sumType">
+         <table class="ui very basic  celled table">
+  <thead>
+    <tr><th>Type of Workout</th>
+    <th>Times</th>
+  </tr></thead>
+  <tbody>
+  </tbody>
+</table>
+        </div>
+      
+    </template>
+    <script>
+        Polymer({
+            is: "activity-info",
+            properties: {
+                db_uname: String,
+                num_type: Number,
+                ary_type: Array, //hold the type of workout
+                ary_typeCount: Array //count frequency of each type of workout 
+            },
+            ready: function() {
+
+            },
+            attached: function() {
+                _act = this;
+                this.initial();
+            },
+            initial: function() {
+                $('#sumType tbody').empty();
+                $.post('/getAllType', function(data) {
+                    var one;
+                    num_type = data[0].type_workout.length;
+                    _act.ary_type = data[0].type_workout;
+                    _act.ary_typeCount = Array(data[0].type_workout.length).fill(0);
+                    $.each(data[0].type_workout, function(k, v) {
+                        one = $('<one-activity/>', {
+                            id: v.replace(/\s+/g, '_'),
+                            types: v,
+                            times: ' 0 times'
+                        });
+                        $('#sumType tbody').append(one.find('tr'));
+                    });
+                    $.post('/getHistory', {
+                            name: _act.db_uname
+                        },
+                        function(data) {
+                            _act.countWorkout(data.postHistory);
+                            _act.updateTimes();
+                        });
+                });
+            },
+            //count frequency of workout
+            countWorkout: function(data) {
+                if (data == undefined) return;
+                var pos;
+                for (var i = 0, len = data.length; i < len; i++) {
+                    pos = _act.ary_type.indexOf(JSON.parse(data[i]).type); //index of type
+                    _act.ary_typeCount[pos]++; //count it
+                }
+            },
+            //update frequency
+            updateTimes: function() {
+                var time, id;
+                //get all count and display
+                $('#sumType tbody tr').each(function(index) {
+                    id = $(this).attr('id');
+                    time = _act.ary_typeCount[index];
+                    if (time != 0)
+                        $('#' + id + ' td').eq(1).text(time + ' times');
+                });
+            }
+
+        });
+
+    </script>

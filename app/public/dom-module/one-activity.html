@@ -1,0 +1,25 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="one-activity">
+    <template>
+<style>
+    span{
+        float: right;
+    }
+</style>
+    <tr id={{id}}><td>{{types}}</td><td>{{times}}</td></tr>
+    </template>
+    <script>
+        Polymer({
+            //usr-activity page use it
+            is: "one-activity",
+            ready: function() {
+
+            },
+            properties: {
+                types: String,
+                times: String,
+                id: String
+            }
+        });
+
+    </script>

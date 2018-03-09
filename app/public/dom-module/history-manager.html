@@ -1,0 +1,126 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="history-module.html">
+
+<dom-module id="history-manager">
+    <template>
+            <style>
+        .ui.relaxed.divided.items::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .ui.relaxed.divided.items {
+            #padding-bottom: 90%;
+            max-height: 550px;
+            overflow: auto;
+        }
+        
+        .history.detail {
+            position: absolute;
+            top: 40%;
+            width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .close.icon {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+
+    </style>
+    <div class="ui main container">
+        <div class="ui horizontal divider">Workout Histroy</div>
+        <div class="ui red circular remove button" on-tap="removeAll">Clear</div>
+		<div class="ui relaxed divided items" id="history">
+		
+		</div>
+        
+	    <div class="ui segment history detail" hidden>   
+            <i class="close red icon" on-tap="hideTable"></i>
+            <table class="ui fixed table">                     
+<thead>
+    <tr>
+        <th>Name</th>
+        <th>Phone </th>
+    </tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+        </div>
+	</div>
+       
+  </template>
+    <script>
+        Polymer({
+            is: 'history-manager',
+            ready: function() {
+                histThis = this;
+                numberOfHistory = 0;
+                this.getFromDataBase();
+            },
+            properties: {
+
+            },
+            createNode: function(value) {
+                $.each(value, function(k, v) {
+                    var name = v.name
+                    //Goes through data base
+                    for (var i = v.postHistory.length - 1; i >= 0; i--) {
+                        var dat = JSON.parse(v.postHistory[i]);
+                        var id = name + dat.postTime;
+                        var data = {
+                            description: dat.description,
+                            place: dat.place,
+                            type: dat.type,
+                            time: dat.time,
+                            date: dat.date,
+                            id: id,
+                            name: dat.owner,
+                            posttime: dat.postTime,
+                            new: dat.new || null
+                        }
+                        var $history = $('<history-module>', data).attr("id", id);
+                        $("#history").append($history);
+                    }
+                });
+            },
+            //get all history from database
+            getFromDataBase: function() {
+                $("#history").empty();
+                $('.history.detail').fadeOut(300);
+                var id = window.location.href.split('/')[4];
+                $.post("/getUsername", {
+                    id: id
+                }, function(data) {
+                    user = data.name;
+                    $.post('/getHistoryData', {
+                        name: user
+                    }, function(data) {
+                        histThis.createNode(data);
+                    })
+                });
+            },
+            //added daniel, remove all history
+            removeAll: function() {
+                $.post('/removeHis', {
+                        id: window.location.href.split('/')[4]
+                    },
+                    function(data) {
+                        if (!data) return;
+                        $("#history").fadeOut(500);
+                        setTimeout(function() {
+                            $("#history").empty();
+                            $("#history").fadeIn(500);
+                        }, 500);
+                    });
+            },
+            //close table
+            hideTable: function() {
+                $('.history.detail').fadeOut(500);
+            }
+        });
+
+    </script>
+</dom-module>

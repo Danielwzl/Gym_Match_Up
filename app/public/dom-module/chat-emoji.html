@@ -1,0 +1,57 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="chat-emoji" inpbox={{inpbox}}>
+    <template>
+        <style>
+            .emoji.icon:hover{
+                background: #ededed;
+
+            }
+            .emoji.icon{
+                background: none;
+            }
+            .emoji.popup{
+                width: 200%;
+                height: 250px;
+                overflow: auto;
+            }
+            .emoji.ui.button{
+                color: hsl(0, 0%, 0%);
+            }
+        </style>
+<div class="ui emoji flowing popup transition hidden" on-tap='sendEmoji'>
+</div>
+
+    </template>
+    <script>
+        Polymer({
+            is: "chat-emoji",
+            properties: {
+                emoji: Object,
+                inpbox: String
+            },
+            ready: function() {
+                if (this.emoji == undefined) {
+                    this.loadEmoji();
+                }
+            },
+            loadEmoji: function() {
+                $.post('/emoji', function(data) {
+                    _this.emoji = data;
+                    $.each(data.emoji, function(k, v) {
+                        if (!k.match(/^flag\-.+/)) {
+                            $('.emoji.popup').append('<i class="ui circular emoji icon button style-scope chat-emoji">' + v + '</i>');
+                        }
+                    });
+                });
+            },
+            //append emoji into textarea of chat page
+            sendEmoji: function(e) {
+                e = e || window.Event;
+                var target = e.target || srcElement;
+                if (target.tagName != 'I') return;
+                $(this.inpbox).val($(this.inpbox).val() + target.textContent);
+            }
+        });
+
+    </script>
+</dom-module>

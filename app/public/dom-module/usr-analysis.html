@@ -1,0 +1,44 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="analysis-button.html">
+<link rel="import" href="ana-food.html">
+<link rel="import" href="ana-timer.html">
+<link rel="import" href="ana-upcoming.html">
+<dom-module id="usr-analysis">
+
+    <template>
+        <style>
+            .anapage{      
+                max-height: 600px;
+                padding-bottom: 20%;
+                overflow: auto;
+            }
+        .anapage::-webkit-scrollbar {
+            display: none;
+        }
+        </style>
+        
+        <div class="ui horizontal divider">Analysis</div>
+        <br>
+        <div class="anapage">
+        <analysis-button page="timer" imgsrc="/image/cnt.jpg"></analysis-button>
+        <analysis-button  page="food" imgsrc="/image/ana.jpg"></analysis-button>
+        <analysis-button page="upcoming" imgsrc="/image/upcoming.jpg"></analysis-button>
+        <ana-timer></ana-timer>
+        <ana-food></ana-food>
+        <ana-upcoming></ana-upcoming>
+            </div>
+  </template>
+    <script>
+        //user analysis page
+        Polymer({
+            is: 'usr-analysis',
+            ready: function() {
+
+            },
+            properties: {
+
+            },
+        });
+
+    </script>
+</dom-module>

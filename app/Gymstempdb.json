@@ -1,0 +1,31 @@
+  "gym_info": {
+      "GoodLife Fitness": [
+            "Calgary Richmond Square 50-3915 51 Street SW Calgary, Alberta T3E 6N1",
+            "Calgary Mount Royal Village 880 16th Avenue SW, Unit 200 Calgary, Alberta T2R 0S9",
+            "Calgary Stephen Avenue 140 8th Avenue SW Calgary, Alberta T2P 1B3",
+            "Calgary Eau Claire Market 200 Barclay Parade SW Calgary, Alberta T2P 4R5",
+            "Calgary Heritage Meadows 100-20 Heritage Meadows Way S.E. Calgary, Alberta T2H 3C1",
+            "Calgary Canyon Meadows 13226 MacLeod Trail SE Calgary, Alberta T2J 7E5",
+            "Calgary Northland Village 5111 Northland Drive NW Calgary, Alberta T2L 2J8",
+            "Calgary Canyon Meadows 13226 MacLeod Trail SE Calgary, Alberta T2J 7E5",
+            "Calgary Canyon Meadows 13226 MacLeod Trail SE Calgary, Alberta T2J 7E5",
+            "Calgary Sunridge 2929 Sunridge Way Calgary, Alberta T1Y 7K7",
+            "Calgary Huntington Hills #7020 - 4th Street N.W. Calgary, Alberta T2K 1C4",
+            "Calgary Deerfoot Mall #2120, 901 64th Avenue NE Calgary, Alberta T2E 7P4",
+            "Calgary South Pointe 12686 48 th Street SE Calgary, Alberta T2Z 0B1"
+        ],
+      "good life": [
+            "sw",
+            "se"
+        ],
+      "mru": ["MRU sw westgate"]
+  },
+  "type_workout": [
+        "Lifting weights",
+        "Yoga",
+        "Calf stretch",
+      "Shoulder and upper arm stretch",
+      "Jogging",
+      "Strength exercises",
+      "ActivityAerobic", "CardioBodyweightBosuFree", "WeightMachineMedicine", "BallResistance", "TubeStability", "BallStretchingWobble", "Board"
+    ],

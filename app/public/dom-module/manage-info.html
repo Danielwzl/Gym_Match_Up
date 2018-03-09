@@ -1,0 +1,183 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="info-module.html">
+
+<dom-module id="manage-info">
+    <style>
+        .ui.relaxed.divided.items::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .ui.relaxed.divided.items {
+            max-height: 550px;
+            padding-bottom: 40%;
+            overflow: auto;
+        }
+
+    </style>
+
+    <template>
+    <div class="ui main container">
+         <div class="ui horizontal divider">Current Matchup</div>
+            <div class="mysearch ui search">
+                <div class="ui icon input">
+                    <input class="prompt" id="searchBox" on-keyUp="search" type="text" placeholder="Search...">
+                    <i class="search icon"></i>
+                </div>
+                <div class="results"></div>
+            </div>
+		<div class="ui relaxed divided items" id="template">
+		
+		</div>
+	
+	</div>
+
+  </template>
+    <script>
+        Polymer({
+            is: 'manage-info',
+            ready: function() {
+                $this = this;
+                this.socket = io.connect();
+                this.getUserName();
+                this.getFromDataBase();
+                //Add callback and fix update
+                this.socket.on("match update", function(data) {
+                    var id = data.id;
+                    if (!$this.$$("#" + id)) return;
+                    $this.$$("#" + id).update(data);
+                    //callback(null, "done")
+                });
+                //This will delete from all user once done was press.
+                this.socket.on("match done", function(data) {
+
+                    $this.deleteMatch(data)
+                })
+                //This will update comments to all online users
+                this.socket.on("comment respond", function(data) {
+                    $this.updateComment(data);
+                })
+                /*-updateW*/
+                $.post('/getAllType', function(data) {
+                    if ($this.typesOfWorkout == undefined) {
+                        $this.typesOfWorkout = [];
+                        $this.typesOfWorkout.push({
+                            title: 'Not specified'
+                        });
+                    }
+                    data = data[0].type_workout;
+                    for (var i = 0, len = data.length; i < len; i++) {
+                        $this.typesOfWorkout.push({
+                            title: data[i]
+                        });
+                    }
+                });
+
+                $('.results').click(function(e) {
+                    e = e || window.Event;
+                    var target = e.target || srcElement;
+                    $.post('/searchPost', {
+                        type: target.textContent
+                    }, function(data) {
+                        if (data) {
+                            $("#template").empty();
+                            $this.createNode(data);
+                        } else $this.getFromDataBase();
+                    });
+                });
+
+            },
+            properties: {
+                typesOfWorkout: []
+            },
+            createNode: function(value) {
+                $.each(value, function(k, v) {
+                    var name = v.name
+
+                    //Goes through data base
+                    $.each(v.currentPost, function(key, val) {
+                        var dat = JSON.parse(val)
+                        //remove index++ is very dangerous action in this case
+                        //user postDate+name as primary key --Daniel
+                        var id = name + dat.postTime.replace(/\,|\s+|\/|\:/g, '');
+                        var limit = parseInt(dat.maxppl);
+                        var place = dat.place.split("|");
+                        var data = {
+                            description: dat.description,
+                            meetplace: place[0],
+                            gym: place[1],
+                            gymaddress: place[2],
+                            type: dat.type,
+                            limit: limit,
+                            listOfPeople: dat.ppl,
+                            time: dat.time,
+                            date: dat.date,
+                            id: id,
+                            name: name,
+                            postTime: dat.postTime,
+                            message: dat.message,
+                            place: dat.place
+                        }
+                        var $info = $('<info-module>', data).attr("id", id);
+
+                        $("#template").append($info);
+                    });
+
+
+
+                })
+
+
+            },
+            getFromDataBase: function() {
+                //March 28 2017 Randy: This will refreash the database Should I empty the #template?
+                $("#template").empty();
+                $.post('/getPostData', function(data, status) {
+                    $this.createNode(data);
+
+
+
+                });
+            },
+            deleteMatch: function(data) {
+                //March 28 2017 Randy: This will call the delete function so it will remove from all login users
+                if (data.id) {
+                    if (!$this.$$("#" + data.id)) return;
+                    $this.$$("#" + data.id).delete();
+                }
+            },
+            updateComment: function(data) {
+                if (data.id) {
+                    if (!$this.$$("#" + data.id)) return;
+                    $this.$$("#" + data.id).commentUpdate(data);
+
+
+                }
+
+            },
+            getUserName: function() {
+                var ids = window.location.href.split('/')[4];
+                $.post("/getUsername", {
+                    id: ids
+                }, function(data) {
+
+                    user = data.name
+                    //return data.name
+                })
+            },
+            search: function() {
+                $('.ui.search')
+                    .search({
+                        source: $this.typesOfWorkout,
+                        searchFields: [
+                            'title'
+                        ],
+                        searchFullText: false
+                    });
+
+            }
+
+
+        });
+
+    </script>
+</dom-module>

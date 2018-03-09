@@ -1,0 +1,244 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="msg-Bubble.html">
+<link rel="import" href="usr-list.html">
+<link rel="import" href="chat-button.html">
+<dom-module id="chat-box">
+    <template>
+        <style>
+            .dialog{
+                float: left;
+                height: 500px;
+                width: 100%;
+                overflow-y: auto;
+                word-wrap: break-word;      /* IE 5.5-7 */
+                z-index: 0;
+            }
+            .dialog::-webkit-scrollbar {
+                display: none;
+            }
+            .privatechat.popup{
+                z-index: 0;
+                opacity: 0.85;
+            }
+            .ui.negative.message{
+                 width: 500px;
+            }
+            .inpbox, #sendmsgBox {
+                width: 100%;
+                height: 80px;
+                clear: both;
+            }
+            
+            button {
+               margin-left: 10%;
+            }
+            #sendmsgBox{
+                overflow: hidden;
+                resize: none;
+
+            }
+            usr-list{
+                display: inline-block;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .err{
+                color: red;
+            }
+            chat-button{
+                display: block;
+                margin-bottom: 5px;
+            }
+            image-loader, chat-emoji{
+                z-index: 2;
+            }
+        </style>
+        <div id="diabox" class="ui floating message dialog">
+                    <div class="ui horizontal divider">Group chat</div>
+            </div>
+        <div class="ui flowing privatechat popup transition hidden">
+            <div id="diabox2" class="ui floating message dialog">
+                <div class="ui horizontal divider">name</div>
+                 </div>
+            </div>
+        <usr-list id="ulist"></usr-list>
+        <chat-button inpbox="#sendmsgBox"></chat-button>
+        <form>
+           <div class="ui fluid icon input inpbox">
+               <textarea id="sendmsgBox" on-keypress="sendMsg" type="text" placeholder="Type message..." cols="10" rows="5"></textarea>  
+            </div>
+            
+            <div class="ui negative message" hidden>
+            <i class="close icon"></i>
+                <span class='err'></span>
+            </div>
+         </form>
+    </template>
+    <script>
+        Polymer({
+            is: "chat-box",
+            properties: {
+                privateChat: Object, //all private msg related to me
+                me: String //user name
+            },
+            ready: function() {
+                _this = this;
+                this.socket = io.connect(); //connect socket to app.js socket
+                this.box = document.getElementById('diabox');
+                this.pvtbox = document.getElementById('diabox2');
+                this.popup = $('.privatechat.popup');
+
+                //when another user login should receive from app.js
+                this.socket.on('join', function(data) {
+                    _this.$.ulist.addUser(data.names, data.dcnt, _this.me);
+                    if (data.dcnt && _this.popup.hasClass('visible')) { //hide msg block when this user log out
+                        _this.popup.transition({
+                            animation: 'fade down',
+                            duration: '1s'
+                        });
+                    }
+                });
+                //receive new msg
+                this.socket.on('new msg', function(data) {
+                    _this.myBubble(_this.box, data.name, data.msg, data.type, 'left', 'name'); //creat msg bubble
+                });
+                //receive private msg
+                this.socket.on('wisper', function(data) { //send private msg
+                    _this.myBubble(_this.pvtbox, data.name, data.msg, data.type, 'left', 'name private', true); //create msg bubble
+                    $('#' + data.name)[0].signal();
+                });
+
+                $('.imgloader .send.icon').click({ //show select image popup page
+                    socket: _this.socket,
+                    myBubble: _this.myBubble,
+                    displayErr: _this.displayErr
+                }, this.sendimg);
+
+            },
+            //hit enter, send msg
+            sendMsg: function(e) {
+                //use enter to send msg and shift+enter is new line
+                if (e.which == 13 && !e.shiftKey) {
+                    e.preventDefault();
+                    var inp = $("#sendmsgBox"),
+                        msg = inp.val();
+                    if (msg.match(/^\s*$/)) {
+                        inp.val(''); //empty inp box
+                        return;
+                    }
+                    e = e || window.Event; //check which bubble checked on
+                    var tar = e.target || srcElement,
+                        sendTo = _this.getWhoSendTo(),
+                        currBox = _this.getDiabox(sendTo); //get diabox;
+                    this.socket.emit('send msg', {
+                        msg: msg,
+                        sendTo: sendTo, //who send to, exist is private msg, null means public
+                        type: 'text'
+                    }, function(data) {
+                        if (!data) {
+                            _this.displayErr(sendTo); //display err if something bad happen on server
+                        } else {
+                            _this.myBubble(currBox, sendTo, msg, 'text', 'olive right', 'name private');
+                        }
+                    });
+                    inp.val('');
+                }
+            },
+            //emit to app.js when I join the chat
+            connectToChat: function(id) { //new user join chat
+                this.socket.emit('new user', {
+                    id: id
+                }, function(data) {
+                    _this.me = data;
+                    //initail history ary
+                    if (_this.privateChat == undefined) {
+                        _this.privateChat = {};
+                        _this.privateChat[data] = {};
+                    }
+                });
+            },
+            //display err msg
+            displayErr: function(sendTo) {
+                $('.err').text(sendTo + " is not exist or online!");
+                $('.ui.negative.message').show(500);
+                setTimeout(function() {
+                    $('.ui.negative.message').fadeOut(1000);
+                }, 5000);
+            },
+            //send img to other users by app.js
+            sendimg: function(e) {
+                var img = $('.preview').html();
+                if ($(img).attr('src') == undefined) return;
+
+                var sendTo = _this.getWhoSendTo(), //who I will send to ''
+                    currBox = _this.getDiabox(sendTo);
+
+                e.data.socket.emit('send msg', {
+                    msg: img += $('.imgloader.popup .sendTo').val(),
+                    type: 'img',
+                    sendTo: sendTo
+                }, function(data) {
+                    if (!data) {
+                        e.data.displayErr(sendTo);
+                    } else {
+                        e.data.myBubble(currBox, sendTo, img, 'img', 'olive right', 'name private'); //create bubble for me
+                    }
+                })
+            },
+            //get all data and create msg bubble
+            myBubble: function(currBox, sendTo, msg, type, dir, name, isPrivate) {
+                var bbl, obj, tempname = sendTo;
+                if (dir == 'olive right') sendTo = '';
+                //obj for dom element of all chat data
+                obj = {
+                    name: sendTo,
+                    wisper: name,
+                    bbl: "ui " + dir + " pointing label msgBubble",
+                    date: new Date().toLocaleString()
+                };
+                if (type == 'text') obj.msg = msg; //text msg
+                bbl = $('<msg-bubble/>', obj); //create dom
+                if (type == 'img') bbl.find('span').html(msg); //img msg
+                if (!_this.privateChat[_this.me][tempname]) {
+                    _this.privateChat[_this.me][tempname] = []; //singleton
+                }
+                if (isPrivate) { //private chat
+                    _this.privateChat[_this.me][tempname].push(bbl); //push bubble into history
+                }
+                $(currBox).append(bbl); //display it
+                if (currBox == this.pvtbox) _this.privateChat[_this.me][tempname].push(bbl); //push my bubble into history
+                console.log(currBox + ": " + this.pvtbox);
+                console.log(_this.privateChat);
+                currBox.scrollTop = currBox.scrollHeight; //scroll down to the buttom
+            },
+            //get who I send to by private chat title
+            getWhoSendTo: function() {
+                var popup = $('.privatechat.popup');
+                return popup.hasClass('visible') ? popup.find('.divider').text().substr(3) : null; //who I will send to
+            },
+            //get private chat box or public chat box displayed
+            getDiabox: function(sendTo) {
+                return sendTo ? this.pvtbox : this.box;
+            },
+            //load private chat box
+            loadPrivateChat: function(who) {
+                var data = _this.privateChat[_this.me][who];
+                if (!data) return;
+                //load private msg from gloabl user chat array
+                $.each(_this.privateChat[_this.me][who], function(k, v) {
+                    $("#diabox2").append(v);
+                });
+            },
+            //clear private chat box
+            resetPrivateChat: function() {
+                $('#diabox2 msg-bubble').remove();
+            },
+            //clear public chat box
+            clearHistory: function() {
+                var who = this.getWhoSendTo();
+                delete this.privateChat[this.me][who];
+            }
+        });
+
+    </script>
+</dom-module>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Gym match up</title>
+    <meta charset="utf-8">
+    <link href='https://fonts.googleapis.com/css?family=Merriweather' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link href="../css/semantic.css" rel="stylesheet">
+    <link href="../css/icon.css" rel="stylesheet">
+    <link href="../css/styles.css" rel="stylesheet">
+    <link rel="import" href="/dom-module/chat-box.html">
+    <link rel="import" href="/dom-module/menu-button.html">
+    <link rel="import" href="/dom-module/menu-button.html">
+    <link rel="import" href="/dom-module/post-match.html">
+    <link rel="import" href="/dom-module/manage-info.html">
+    <link rel="import" href="/dom-module/user-profile.html">
+    <link rel="import" href="/dom-module/history-manager.html">
+    <link rel="import" href="/dom-module/usr-analysis.html">
+    <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="../js/semantic.js"></script>
+    <script src="../js/misc.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<style>
+    body::-webkit-scrollbar {
+        display: none;
+    }
+    
+    body {
+        width: 60%;
+        min-width: 300px;
+        margin-left: auto;
+        max-height: 100%;
+        margin-right: auto;
+        background: url(/image/bg.jpg);
+        background-size: cover;
+    }
+    
+    menu-button {
+        padding: none;
+    }
+    
+    body .ui.six.item.menu {}
+    
+    .ui.six.item.menu {
+        position: fixed;
+        bottom: 0;
+        width: 60%;
+        min-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+        border: none;
+        background: rgba(255, 255, 255, 0);
+    }
+    
+    .ui.six.item.menu .active.item {
+        background: none;
+    }
+    
+    .ui.six.item.menu .item:hover {
+        background: none;
+    }
+    
+    .ui.chat.top {
+        background: rgba(255, 255, 255, 0.29);
+    }
+
+</style>
+
+<body>
+    <div id="mainMenu">
+        <div class="ui profile top attached tab" data-tab="user">
+            <user-profile></user-profile>
+        </div>
+        <div class="ui top active attached tab" data-tab="match">
+            <manage-info></manage-info>
+        </div>
+        <div class="ui chat top attached tab segment" data-tab="chat">
+            <chat-box id="chatbox"></chat-box>
+        </div>
+        <div class="ui top attached tab" data-tab="post">
+            <post-match></post-match>
+        </div>
+        <div class="ui top attached tab" data-tab="history">
+            <history-manager></history-manager>
+        </div>
+        <div class="ui top attached tab" data-tab="analy">
+            <usr-analysis></usr-analysis>
+        </div>
+
+        <div class="ui six item menu">
+            <menu-button item="item" pop="user" type="user" icon="circular blue user icon"></menu-button>
+            <menu-button item="active item" pop="match" type="match" icon="active circular orange users icon"></menu-button>
+            <menu-button item="item" pop="chat" type="chat" icon="circular olive comments icon"></menu-button>
+            <menu-button item="item" pop="post" type="post" icon="circular plus icon"></menu-button>
+            <menu-button item="item" pop="history" type="history" icon="circular purple history icon"></menu-button>
+            <menu-button item="item" pop="analysis" type="analy" icon="circular yellow line chart icon" id='analy'></menu-button>
+            <menu-button item="item" pop="logout" type="logout" icon="circular red power icon" id='logout'></menu-button>
+        </div>
+    </div>
+    <script>
+        $(function() {
+            var id = window.location.href.split('/')[4];
+            $('user-profile').attr('uid', id);
+            $('chat-box')[0].connectToChat(id); //initial chat socket
+            $('#logout').click(function() { //louout
+                $.post('/logout/' + id, function(data) {
+                    window.location.href = '/';
+                });
+            });
+
+            //when hit buttons, they should load(refresh) the data
+            $("menu-button[pop=match]").click(function() {
+                $('manage-info')[0].getFromDataBase();
+            });
+
+            $("menu-button[pop=user]").click(function() {
+                $('activity-info')[0].initial();
+            });
+
+
+            $("menu-button[pop=history]").click(function() {
+                $('history-manager')[0].getFromDataBase();
+            });
+        });
+
+    </script>
+
+</html>

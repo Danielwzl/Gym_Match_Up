@@ -1,0 +1,146 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="forgot-psw.html">
+<dom-module id="usr-login">
+    <template>
+        <style>
+            .ten.wide.field.login>.ui.button {
+                width: 100%;
+            }
+            
+            .ten.wide.field.login {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            #forgetpw:hover {
+                text-decoration: underline;
+                font-weight: bold;
+            }
+            
+            #forgetpw {
+                margin-left: 45%;
+                font-size: 90%;
+            }
+            
+            #errLogin {
+                color: #ff0000;
+            }
+        </style>
+        <form class="ui form signin">
+            <div class="ten wide field login">
+                <div class="ui left icon input">
+                    <i class="user icon"></i>
+                    <input on-keyup="changeBack" type="text" name="userAccount" placeholder="Username or Email..." value={{uname}} required>
+                </div>
+            </div>
+            <div class="ten wide field login">
+                <div class="ui left icon input">
+                    <i class="lock icon"></i>
+                    <input on-keyup="changeBack" type="password" name="password" placeholder="Password..." pattern=".{6,}" title="Password must be at least 6 length of combination of number or letter" value={{psw}} required>
+                </div>
+                <div id="errLogin" hidden>Username or password is not correct!</div>
+            </div>
+            <div class="ten wide field login">
+                <div class="ui checkbox">
+                    <input on-tap='remember' type="checkbox" value='1' name="rememberme">
+                    <label>Remember me</label>
+                </div>
+                <a on-click="forgot" id="forgetpw" href="#">Forgot?</a>
+                <br>
+            </div>
+            <div class="ten wide field login">
+                <button on-tap="submit" class="ui green button" name='action' value="signin">Login</button>
+            </div>
+        </form>
+        <br>
+        <forgot-psw></forgot-psw>
+    </template>
+    <script>
+        Polymer({
+            is: "usr-login",
+            ready: function() {
+                var user = this.useCookie();
+                if (!!user) {
+                    this.uname = user.name;
+                    this.psw = user.pass;
+                }
+            },
+            properties: {
+                uname: String,
+                psw: String,
+                usecookie: Boolean
+            },
+            //submit form
+            submit: function(e) {
+                e.preventDefault();
+                _this = this;
+                var inpName = $('.ui.form.signin input[name=userAccount]'),
+                    inpPass = $('.ui.form.signin input[name=password]'),
+                    name = inpName.val().toString(),
+                    pass = inpPass.val().toString();
+                if (this.changeColor(inpName, name)) return;
+                if (this.changeColor(inpPass, pass)) return;
+                $.post('/login', {
+                    name: name,
+                    pass: pass
+                }, function(data) {
+                    if (data.login === false) {
+                        $('#errLogin').show(200);
+                        $('usr-login button').prop('disabled', true);
+                        setTimeout(function() {
+                            $('usr-login button').prop('disabled', false);
+                        }, 5000)
+                        return;
+                    }
+                    if (this.usecookie) _this.setCookie(name, pass);
+                    window.location.href = '/userMain/' + data.id;
+                });
+            },
+            fbLogin: function() {},
+            //forget password
+            forgot: function(e) {
+                e.preventDefault();
+                $('.ui.form.forgot').transition('slide down');
+            },
+            //change box color
+            changeColor: function(element, value) {
+                var badColor = '#ff6666';
+                if (value == '' || !value.match(/^\S+$/)) {
+                    element.css('backgroundColor', badColor);
+                    return true;
+                }
+                return false;
+            },
+            //change box color back when user change password or username
+            changeBack: function(e) {
+                $('#errLogin').hide(200);
+                var emptyColor = 'white';
+                var inp = $(e.target);
+                inp.css('backgroundColor', emptyColor);
+            },
+            //remember me
+            remember: function() {
+                this.usecookie = $('input[name=rememberme]').prop('checked');
+            },
+            //set cookie
+            setCookie: function(name, pass) {
+                $.cookie('name', name, {
+                    expires: 30
+                });
+                $.cookie('pass', pass, {
+                    expires: 30
+                });
+            },
+            //use cookie to fill in boxes automatically
+            useCookie: function() {
+                if (!!$.cookie('name') && !!$.cookie('pass'))
+                    return {
+                        name: $.cookie('name'),
+                        pass: $.cookie('pass')
+                    }
+                return null;
+            }
+        });
+
+    </script>
+</dom-module>

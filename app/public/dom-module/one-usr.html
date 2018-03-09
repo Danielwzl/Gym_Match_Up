@@ -1,0 +1,80 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="one-usr">
+    <template>
+<style>
+    .one.usr{
+        height: 100%;
+        width: auto;  
+        display: inline-block;
+    }
+    .one.usr:hover{
+        background-color: #2b8823;
+    }
+    .content>div{
+        text-align: center; #center the name
+        vertical-align: middle;
+    }
+    .newmsg{
+        font-size: 70%;
+        color: red;
+    }
+    .noselect {
+ -webkit-touch-callout: none; /* iOS Safari */ -webkit-user-select: none; /* Safari */ -khtml-user-select: none; /* Konqueror HTML */ -moz-user-select: none; /* Firefox */ -ms-user-select: none; /* Internet Explorer/Edge */ user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+            }
+</style>
+
+ 
+<div on-tap="wisper" class="ui link card one usr noselect">
+    <div class="content">
+        <div class="header">{{name}}<span class="newmsg" hidden>❗️</span>
+    </div>
+  </div>
+
+    </template>
+    <script>
+        //usr-list use it
+        Polymer({
+            is: "one-usr",
+            ready: function() {},
+            attached: function() {
+                //initial semantic ui popup
+                this.popupWindow();
+            },
+            properties: {
+                name: String
+            },
+            //click usr in usr-list trigger popup private msg box
+            popupWindow: function() {
+                var name = this.name;
+                $(this).popup({
+                    popup: $('.privatechat.popup'),
+                    on: 'click',
+                    closable: false,
+                    transition: 'slide up',
+                    target: $('chat-box'),
+                    distanceAway: 50,
+                    duration: 500,
+                    lastResort: 'top center',
+                    onShow: function() {
+                        if (name)
+                            $('chat-box')[0].loadPrivateChat(name);
+                    },
+                    onHidden: function() {
+                        if (name)
+                            $('chat-box')[0].resetPrivateChat(); //clear private box msg
+                    }
+                });
+            },
+            //append private chat user name into title
+            wisper: function() {
+                $(this).find('.newmsg').fadeOut(500);
+                $('.privatechat.popup .divider').text('To ' + this.name);
+            },
+            //symbol for new msg coming
+            signal: function() {
+                $(this).find('.newmsg').fadeIn(500);
+            }
+        });
+
+    </script>
+</dom-module>

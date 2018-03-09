@@ -1,0 +1,34 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+
+<dom-module id="removable-tag" qty={{qty}} cal={{cal}} pro={{pro}}>
+    <template>
+
+    <style>
+	   
+    </style>
+             <div class="ui image label">{{food}}
+  <i class="close icon"></i>
+</div>
+  </template>
+    <script>
+        //tag on ana-food page
+        Polymer({
+            is: 'removable-tag',
+            ready: function() {
+
+            },
+            attached: function() {
+                $(".close.icon").click(function() {
+                    $(this).parent().parent().remove();
+                });
+            },
+            properties: {
+                qty: Number,
+                cal: Number,
+                pro: Number
+            }
+        });
+
+    </script>
+</dom-module>

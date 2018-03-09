@@ -1,0 +1,53 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="image-loader">
+    <template>
+        <style>
+            .send.icon:hover{
+                 background: #ededed; 
+            }
+             .send.icon:active{
+                border: 1pt solid black; 
+            }
+             .send.icon{
+               display: inline;
+            }
+            img{
+                width: 50%;
+            }
+            input, i{
+                margin-top: 10px;
+            }
+        </style>
+<div class="ui imgloader flowing popup transition hidden">
+    <div class="preview"><img></div>
+    <input type="file" name="selimg" on-change="readImg" id='upload'>
+    <input type="text" class="ui input sendTo" placeholder="Type captions...">
+    <i class="blue circular send icon"></i>
+</div>
+
+    </template>
+    <script>
+        Polymer({
+            is: "image-loader",
+            properties: {
+
+            },
+            ready: function() {},
+            //get image from  local machine and load to chat box
+            readImg: function() {
+                var input = document.getElementById('upload');
+                var img = $('.preview img');
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        img.attr('src', e.target.result);
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                } else {
+                    img.removeAttr('src');
+                }
+            }
+        });
+
+    </script>
+</dom-module>

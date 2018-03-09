@@ -1,0 +1,140 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="person-info">
+    <template>
+<style>
+    .ui.header{
+        display: inline-block;
+    }
+    #per_suc{
+        font-size: 150%;
+        font-weight: bolder;
+        color: green;
+    }
+</style>
+        <div class="ui header">Welcome</div>
+        <div class="ui header nameheader">{{db_uname}}</div>
+       <form class="ui per_info form">
+        <div class="field">
+                <label>Name</label>
+                <div class="two fields">
+                    <div class="field">
+                        <input type="text" name="fName" placeholder="First Name" value={{fname}} disabled>
+                    </div>
+                    <div class="field">
+                        <input type="text" name="lName" placeholder="Last Name" value={{lname}}  disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <label>Address</label>
+                <div class="fields">
+                    <div class="twelve wide field">
+                        <input type="text" name="street" placeholder="Street" value={{street}}  disabled>
+                    </div>
+                    <div class="four wide field">
+                        <input type="text" name="unit" placeholder="Unit" value={{unit}}  disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <label>City</label>
+                <div class="fields">
+                    <div class="twelve wide field">
+                        <input type="text" name="city" placeholder="City" value={{city}}  disabled>
+                    </div>
+                    <div class="four wide field">
+                        <input type="text" name="pcode" placeholder="Postal Code" pattern="[A-Za-z][0-9][A-Za-z] [0-9][A-Za-z][0-9]" title="Postal code format: A1B A1B" value={{pcode}} disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <label>Province</label>
+                    <select name="province" class="ui fluid dropdown">
+                        <option value={{prov}}  style="display: none;">{{prov}}</option>
+                        <option value="Alberta">Alberta</option>
+                        <option value="British Columbia">British Columbia</option>
+                        <option value="Manitoba">Manitoba</option>
+                        <option value="Newfoundland">Newfoundland and Labrador</option>
+                        <option value="Nova Scotia">Nova Scotia</option>
+                        <option value="Ontario">Ontario</option>
+                        <option value="Prince Edward Island">Prince Edward Island</option>
+                        <option value="Quebec">Quebec</option>
+                        <option value="Saskatchewan">Saskatchewan</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Country</label>
+                    <select name="country" class="ui fluid dropdown">
+                        <option value={{cty}} style="display: none;">{{cty}}</option>
+                        <option value="Canada">Canada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field">
+                <label>Contact</label>
+                <input type="text" name="phone" placeholder="Phone number" pattern="[1-9][0-9]{9}" title="Please enter 10 digits phone number" value={{phone}} disabled>
+            </div>
+           <div class="ui submit orange button" on-tap="unlock">Enable Update</div>
+  <div class="ui green button" on-tap="submit">Update</div>
+                <br>  <br><div id="per_suc" hidden>Personal Info updated</div>
+        </form>
+    </template>
+    <script>
+        Polymer({
+            is: "person-info",
+            ready: function() {
+                _perInfo = this;
+                $('person-info input').attr('disabled', true);
+            },
+            properties: {
+                db_uname: String,
+                fname: String,
+                lname: String,
+                street: String,
+                city: String,
+                prov: String,
+                cty: String,
+                pcode: String,
+                phone: String,
+                isLocked: Boolean,
+                initialPage: Function
+            },
+            //unlock button
+            unlock: function(e) {
+                e.preventDefault();
+                var inputs = $('person-info input');
+                this.isLocked = inputs.eq(0).attr('disabled');
+                inputs.each(function() {
+                    $(this).attr('disabled', !_perInfo.isLocked);
+                })
+            },
+            //submit form
+            submit: function(e) {
+                if (!this.isLocked) return;
+                e.preventDefault();
+                $.post('/updatePersonalInfo', $('.ui.per_info.form').serialize() + '&name=' + this.db_uname, function(data) {
+                    if (data) {
+                        $('#per_suc').fadeIn(500);
+                        setTimeout(function() {
+                            $('#per_suc').fadeOut(500);
+                        }, 3000);
+                    }
+                });
+            },
+            //load page
+            initialPage: function(db_uname, name, address, phone) {
+                this.db_uname = db_uname;
+                this.fname = name.fName;
+                this.lname = name.lName;
+                this.street = address.street;
+                this.city = address.city;
+                this.prov = address.province;
+                this.cty = address.country;
+                this.pcode = address.pcode;
+                this.phone = phone;
+
+            }
+        });
+
+    </script>

@@ -1,0 +1,234 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="ana-foodtable.html">
+<link rel="import" href="removable-tag.html">
+<dom-module id="ana-food">
+
+    <template>
+        <style>
+            .header{
+                text-align: center;
+            }
+            .ui.form{
+            }
+            .divider{
+                clear: both;
+            }
+            .ui.food.grid{
+
+            }
+            .ui.button{
+                display: block;
+           
+            }
+            .ui.food.modal::-webkit-scrollbar {
+                display: none;
+        }
+        </style>
+         <div class="ui food modal scrolling">
+  <div class="header">
+    Food Recomendation
+  </div>
+    <br>
+<div class="ui two columns grid">
+    <div class="five wide column">
+    <div class="ui form">
+       <div class="field">
+           <input type="number" min=1 placeholder="Type qty.." id="qty"><br><br>
+               <select class="foodlist">
+            <option value='' selected disabled>select food</option>
+           </select>  
+           <br>
+           <input type="number" min=0 placeholder="Type calroies constraint.." id="cal"><br>
+         
+<br>
+             <div class="ui green tiny button" on-tap="submit">Finish</div> 
+      </div>
+
+    </div>
+        </div>
+                        <div class="ui vertical divider"></div>      
+    <div class="foodtags eleven wide column">
+    </div>
+    </div>
+    <br><br>
+            
+<div class="ui segment food detail" hidden>  
+     <div class="ui horizontal divider">Max protein can get is {{protein}} within {{calroies}} calroies</div>
+            <table class="ui fix table">                     
+<thead>
+    <tr>
+        <th>Food/Unit</th>
+        <th>Qty</th>
+        <th>Calroies (kcal)</th>
+        <th>Protein (g)</th>
+    </tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+        </div>
+</div>
+
+  </template>
+    <script>
+        Polymer({
+            is: 'ana-food',
+            ready: function() {
+                _food = this;
+                if (this.dp == undefined || !this.dp) this.dp = [];
+            },
+            attached: function() {
+                if (this.item == undefined || !this.item) this.getData();
+            },
+            properties: {
+                dp: [], //dp array
+                //item: [], //all food selected, user input
+                cap: Number //total calroies, user input
+            },
+            initialPage: function(data) {
+                this.generateDropdown(data);
+                this.dropdownListener();
+            },
+            //get all food data from app.js
+            getData: function() {
+                $.post('/getFoodData', function(data) {
+                    _food.item = data[0].food_pro_cal;
+                    _food.initialPage(data[0].food_pro_cal);
+                });
+            },
+            //put tag after user selected
+            dropdownListener: function() {
+                $('.foodlist').change(function() {
+                    var vals = $(this).val().split('|'); //split val into name qty pro and cal
+                    var className = vals[0].replace(/\s+|\//g, '');
+                    if ($(".foodtags ." + className)[0]) {
+                        $(this).prop('selectedIndex', 0);
+                        return; //no same food selected
+                    }
+                    $('.foodtags').append($('<removable-tag/>', {
+                        food: vals[0],
+                        class: className,
+                        qty: $("#qty").val() || 1,
+                        pro: vals[1], //protein
+                        cal: vals[2] //calories
+                    }));
+                    $(this).prop('selectedIndex', 0);
+                });
+            },
+            generateDropdown: function(data) {
+                var key;
+                for (var i = 0, len = data.length; i < len; i++) {
+                    key = Object.keys(data[i])[0];
+                    $('.foodlist').append($('<option/>', {
+                        value: key + '|' + data[i][key][0] + '|' + data[i][key][1],
+                        text: key
+                    }));
+                }
+            },
+            //submit the form
+            submit: function(e) {
+                var cap = $('#cal').val();
+                if (!cap.match(/^[1-9][0-9]*/)) return; //not integer return
+                e.preventDefault();
+                var items = this.generateItems(); //get organized items array
+                if (items.length == 0) return;
+                var ans = this.optimization(cap, items); //dp
+                this.showResult(ans, cap); //display
+
+            },
+            generateItems: function() {
+                var items = [],
+                    qty,
+                    key,
+                    item,
+                    newItem;
+                //get all tags and put into format ary
+                $('removable-tag').each(function() {
+                    newItem = {};
+                    item = $(this)[0];
+                    newItem[item.food] = [~~item.qty * ~~item.pro, ~~item.qty * ~~item.cal];
+                    items.push(newItem);
+
+                });
+                return items;
+            },
+            //get max protein within certain amount calroies injecting
+            optimization: function(cap, items) {
+                var name,
+                    item,
+                    dpKey,
+                    tempTotal,
+                    prevItemValue,
+                    ans = [],
+                    max = 0,
+                    dpValue,
+                    dp = [];
+                //initial ary
+                for (var i = cap; i >= 0; i--) {
+                    dp[i] = {
+                        0: []
+                    };
+                }
+                //compressed dp with storing optimization sets
+                //dp ary has optimized value along with its' sets
+                for (var i = 0, numOfItem = items.length; i < numOfItem; i++) {
+                    name = Object.keys(items[i])[0];
+                    item = items[i][name];
+                    for (var j = cap; j >= item[1]; j--) {
+                        dpKey = ~~Object.keys(dp[j])[0]; //target value
+                        prevItemValue = ~~Object.keys(dp[j - item[1]])[0]; //if w is 8, it should find max value of w 2 (10-8=2), total w = 10
+                        tempTotal = prevItemValue + item[0]; //get the rest biggest value
+                        if (dpKey < tempTotal) {
+                            delete dp[j][dpKey];
+                            dpKey = tempTotal; //get current total of this set
+                            dpValue = []; //empty temp ary
+                            dpValue.push(name); //put current set into set ary, concat with cap [target - current] elements
+                            dpValue = dpValue.concat(dp[j - item[1]][prevItemValue]);
+                            //console.log(i + ", " + j + ", " + (j - item[1]) + " : " + dp[j - item[1]][prevItemValue]);
+                            dp[j][dpKey] = dpValue; //assign all set back to dp ary
+                        }
+
+                    }
+                }
+                //console.log(dp);
+                //do not sort it, 2n comlexity here
+                for (var i = 0, len = dp.length; i < len; i++) {
+                    if (max < ~~Object.keys(dp[i])[0]) {
+                        max = ~~Object.keys(dp[i])[0];
+                    }
+                }
+                for (var i = 0, len = dp.length; i < len; i++) {
+                    if (max == ~~Object.keys(dp[i])[0]) {
+                        ans.push(dp[i]);
+                    }
+                }
+                return ans;
+                //console.log(ans);
+            },
+            //get best set from ans ary
+            showResult: function(ans, cap) {
+                this.protein = Object.keys(ans[0]);
+                this.calroies = cap;
+                $('.food.detail tbody').empty(); //empty when recalculate
+                var key, item, qty, cal, pro, tag;
+                //get the most pro with least amount of calories
+                key = Object.keys(ans[0])[0];
+                item = ans[0][key];
+                for (var j = 0; j < item.length; j++) {
+                    tag = $('.' + item[j].replace(/\s+|\//g, ''))[0]; //get all detail from the tag
+                    qty = ~~tag.qty;
+                    cal = ~~tag.cal * qty;
+                    pro = ~~tag.pro * qty;
+                    $('.food.detail tbody').append($('<ana-foodtable/>', {
+                        name: item[j],
+                        qty: qty,
+                        cal: cal,
+                        pro: pro
+                    }).find('tr'));
+                }
+                $(".food.detail").fadeIn(500);
+            }
+        });
+
+    </script>
+</dom-module>

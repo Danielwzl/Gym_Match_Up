@@ -1,0 +1,63 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="chat-emoji.html">
+<link rel="import" href="image-loader.html">
+<dom-module id="chat-button" inpbox={{inpbox}}>
+    <template>
+        <style>
+            .icon:hover{ 
+                background: #ededed; 
+            } 
+            .icon:active{
+                border: 1pt solid black; 
+            }
+            chat-emoji{
+
+            }
+            .ui.popup{
+                background-color:rgba(0, 0, 0, 0);
+                z-index: 0;
+                border: none;
+                box-shadow: none;
+            }
+            .ui.popup:before{
+                content: none;
+            }
+            .noselect {
+ -webkit-touch-callout: none; /* iOS Safari */ -webkit-user-select: none; /* Safari */ -khtml-user-select: none; /* Konqueror HTML */ -moz-user-select: none; /* Firefox */ -ms-user-select: none; /* Internet Explorer/Edge */ user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+            }
+        </style>
+
+<i class="chats circular wizard icon green"></i>
+<div class="ui flowing popup transition hidden noselect">
+    <i class="chats circular smile icon green"></i>
+    <i class="chats circular image icon green"></i>
+    <i on-tap="clearScn" class="chats circular refresh icon green"></i>
+    <div></div>
+</div>
+        
+<chat-emoji inpbox={{inpbox}}></chat-emoji>
+<image-loader></image-loader>
+    </template>
+    <script>
+        Polymer({
+            is: "chat-button",
+            properties: {
+                diabox: String,
+                inpbox: String
+            },
+            ready: function() {
+
+
+            },
+            //clear chat box
+            clearScn: function() {
+                var diabox = $('.privatechat.popup').hasClass('visible') ? '#diabox2' : '#diabox',
+                    header = $(diabox + ' .divider').text();
+                $(diabox).empty();
+                $(diabox).append('<div class="ui horizontal divider">' + header + '</div>'); //append header
+                if (diabox == '#diabox2') $('chat-box')[0].clearHistory(); //clear private chat
+            }
+        });
+
+    </script>
+</dom-module>

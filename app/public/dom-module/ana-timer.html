@@ -1,0 +1,101 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="ana-timer">
+
+    <template>
+        <style>
+            .header{
+                text-align: center;
+            }
+            p {
+                text-align: center;
+                font-size: 60px;
+                    }
+            .ui.form{
+                width: 80%;
+                margin-left: auto;
+                margin-right: auto;
+                height: 200px;
+            }
+            .button{
+                float: right;
+
+            }
+            #done{
+                color: red;
+            }
+        </style>
+
+<div class="ui timer modal">
+  <div class="header">
+    Workout Timer
+  </div>
+    <br>
+    
+    <p id="demotimer">0h 0m 0s</p>
+    <P id="done" hidden>Done</P>
+    <div class="ui form">
+       <div class="three fields">
+        <input type="number" name="hour" placeholder="hour..." min=0 on-keyDown="disType">
+            <input type="number" name="min" placeholder="minutes..." max=60 min=0 on-keyDown="disType">
+            <input type="number" name="sec" placeholder="second..." max=60 min=0 on-keyDown="disType">
+      </div>
+        <br>  <br>
+        <div class="ui red tiny button" on-tap="clearTimer">Clear</div>
+        <div class="ui orange tiny button" on-tap="pauseTimer">Pause</div>
+         <div class="ui green tiny button" on-tap="startTimer">Start</div>
+    </div>
+    <br><br>
+</div>
+  </template>
+    <script>
+        Polymer({
+            is: 'ana-timer',
+            ready: function() {},
+            properties: {
+                timer: Function
+            },
+            disType: function(e) {
+                e.preventDefault();
+            },
+            startTimer: function(e) {
+                clearInterval(this.timer);
+                e.preventDefault();
+                var h = ~~$('[name=hour]').val() || 0;
+                var m = ~~$('[name=min]').val() || 0;
+                var s = ~~$('[name=sec]').val() || 0;
+                if (h == 0 && m == 0 && s == 0) return;
+                this.timer = setInterval(function() {
+                    if (m == 0 && s == 0 && h == 0) {
+                        clearInterval(timer);
+                        $('#done').fadeIn(500);
+                        setTimeout(function() {
+                            $('#done').fadeOut(500);
+                        }, 10000);
+                    }
+
+                    $("#demotimer").text(h + "h " + m + "m " + s + "s");
+                    if (s == 0) { //sec reach 0
+                        if (m > 0) m--; //min--
+                        else {
+                            if (h > 0) { //min reach 0
+                                h--; //hour--
+                                m = 59; //min = 59
+                            }
+                        }
+                        s = 60;
+                    }
+                    s--;
+                }, 1000);
+
+            },
+            pauseTimer: function() {
+                clearInterval(this.timer);
+            },
+            clearTimer: function() {
+                clearInterval(this.timer);
+                $('#demotimer').text('0h 0m 0s');
+            }
+        });
+
+    </script>
+</dom-module>

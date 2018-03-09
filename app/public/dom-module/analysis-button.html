@@ -1,0 +1,49 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<dom-module id="analysis-button">
+
+    <template>
+        <style>
+            .ui.link.ana.card{
+                float: left;
+                 margin-left: 5px;
+            }
+            img{
+                max-height: 300px;
+                max-width: 300px;
+                background: rgb(255, 255, 255);
+            }
+        </style>
+          <div class="ui link card ana" on-tap="startAna">
+    <div class="image">
+      <img src={{imgsrc}}>
+    </div>
+  </div>
+
+  </template>
+    <script>
+        //all big button for the functions in analysis page
+        Polymer({
+            is: 'analysis-button',
+            ready: function() {
+
+            },
+            properties: {
+                page: String
+            },
+            //show popup
+            startAna: function() {
+                $('.ui.' + this.page + '.modal')
+                    .modal({
+                        observeChanges: true,
+                        allowMultiple: false,
+                        onHidden: function() {
+                            $('body').removeClass('dimmable');
+                        }
+                    }).modal('show');
+            }
+
+        });
+
+    </script>
+</dom-module>

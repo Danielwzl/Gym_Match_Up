@@ -1,0 +1,177 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="his-detail.html">
+
+<dom-module id="history-module">
+    <template>
+
+
+    <style>
+	
+	.restored-item {
+		transform: translateX(300px);
+		animation: 
+			openspace .3s ease forwards, 
+			restored-item-animation .5s .3s cubic-bezier(.14,.25,.52,1.56) forwards;
+	}
+ 
+	@keyframes openspace {
+		to {
+			height: auto;
+		}
+	}
+ 
+	@keyframes restored-item-animation {
+		0% {
+			opacity: 0;
+			transform: translateX(300px);
+		}
+ 
+		70% {
+			opacity: 1;
+			transform: translateX(-50px);
+		}
+	 
+		100% {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+	
+	.removed-item {
+		animation: removed-item-animation 1s linear;
+		transform-origin: 390px 100%;
+	}
+ 
+	@keyframes removed-item-animation {
+    0% {
+			opacity: 1;
+			transform: translateX(0) rotateZ(0);
+		}
+ 
+		50% {
+			opacity: 1;
+			transform: translateX(-400px) rotateZ(0);
+		}
+ 
+		75% {
+			opacity: 1;
+			transform: translateX(-420px) rotateZ(-30deg);
+		}
+ 
+		100% {
+			opacity: 0;
+			transform: translateX(-800px) rotateZ(-60deg)  translateY(400px);
+		}
+	}
+	
+	.normal{
+		background-color: rgba(250, 192, 62, 0.3) !important;
+	}
+        
+    .new{
+		background-color: rgba(227, 33, 85, 0.3) !important;
+	}
+
+  .ui.item{
+    width: auto;
+    padding: 1.5%;  
+    white-space: normal;
+	border: 1px solid #ccc !important;
+	border-radius: 16px !important;
+  }
+  
+    </style>
+
+    <div class$="ui item {{animate}} {{color}}" on-tap="setToNotNew">
+	
+	  <div class="content">
+		<div class="header">
+			<h1 class="ui horizontal divider">{{name}}</h1>
+		</div>
+
+		<div class="description">
+			             <div>Time: {{time}}</div>
+				<div>Date: {{date}}</div>
+				<div>Place: {{place}}</div>
+				<div>Type of Work Out: {{type}}</div>
+		</div>
+		
+		<br />
+	  </div>
+	</div>
+	
+	
+ 
+    <br/>
+
+  </template>
+    <script>
+        Polymer({
+            is: 'history-module',
+            ready: function() {
+                this.animate = "restored-item";
+
+            },
+            attached: function() {
+                this.uid = window.location.href.split('/')[4];
+                this.color = this.getColor(this.new);
+            },
+            properties: {
+                name: String,
+                id: String,
+                time: String,
+                date: String,
+                place: String,
+                type: String,
+                animate: String,
+                description: String,
+                posttime: String,
+                new: Boolean
+            },
+            delete: function() {
+                this.animate = "removed-item";
+                $(this).on("animationend", function() {
+                    $(this).remove();
+                });
+            },
+            getColor: function(isNew) {
+                if (isNew)
+                    return 'new';
+                return 'normal';
+            },
+            //added daniel, set read history to orange and update as read to database
+            setToNotNew: function() {
+                var _this = this;
+                this.showDetail();
+                if (this.new) this.new = false;
+                else return;
+                $.post('/setHisRead', {
+                    id: this.uid,
+                    postTime: this.posttime,
+                    name: this.name
+                }, function(data) {
+                    _this.color = _this.getColor(this.new);
+                })
+            },
+            //added daniel show table of user name and phone joined in this match
+            showDetail: function() {
+                $('.history.detail tbody').empty();
+                $.post('/getPhones', {
+                    name: this.name,
+                    postTime: this.posttime,
+                    id: this.uid
+                }, function(data) {
+                    $.each(data, function(k, v) {
+                        var ele = $('<his-detail/>', {
+                            name: k,
+                            phone: v
+                        });
+                        $('.history.detail tbody').append(ele.find('tr'));
+                    });
+                    $('.history.detail').fadeIn(1000);
+                });
+            }
+        });
+
+    </script>
+</dom-module>

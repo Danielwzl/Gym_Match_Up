@@ -1,0 +1,9 @@
+{
+    "name": "project",
+    "version": "0.0.1",
+    "dependencies": {
+        "jquery": "",
+        "polymer": "",
+        "jquery.cookie": "^1.4.1"
+    }
+}
